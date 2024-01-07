@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { WhatsappService } from './whatsapp.service';
 
 @Controller('whatsapp')
@@ -9,7 +10,6 @@ export class WhatsappController {
 
   @Get('webhook')
   verifyWebhook(@Query() query: any) {
-    console.log('the request', query);
     const result = this.whatsappService.verifyWebhook(query);
     if (result.isVerified) {
       this.logger.log('WEBHOOK VERIFIED');
@@ -20,7 +20,8 @@ export class WhatsappController {
   }
 
   @Post('webhook')
-  webhookPost(@Body() req: any) {
-    // this.whatsappService.handleWebhookPost(req);
+  async webhookPost(@Body() request: any, @Res({ passthrough: true }) response: Response) {
+    const result = await this.whatsappService.handleWebhookPost(request);
+    response.status(result.code).send(result.message);
   }
 }
